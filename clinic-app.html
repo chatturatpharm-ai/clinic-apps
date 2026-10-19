@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึกการตรวจมาตรฐานสถานพยาบาลประจำปี</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .print-shadow { box-shadow: none !important; border: none !important; }
+            .print-break-inside { break-inside: avoid; }
+            .print-photo-container { display: block !important; margin-top: 8px; }
+            .print-photo-img { max-width: 100% !important; height: auto !important; border-radius: 8px; border: 1px solid #cbd5e1; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden print-shadow">
+        
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-teal-700 to-cyan-800 text-white p-6 sm:p-8 text-center relative">
+            <button type="button" onclick="openSettings()" class="absolute top-4 right-4 bg-teal-800/90 hover:bg-teal-900 text-teal-100 px-3 py-1.5 rounded-lg text-xs font-medium border border-teal-600 no-print flex items-center gap-1 shadow-xs transition">
+                ⚙️ ตั้งค่าลิงก์ระบบ
+            </button>
+            <h1 class="text-xl sm:text-2xl font-bold mb-2">บันทึกการตรวจมาตรฐานสถานพยาบาล (ตรวจประจำปี)</h1>
+            <p class="text-teal-100 text-sm sm:text-base" id="headerSubTitle">กลุ่มงานเภสัชกรรมและคุ้มครองผู้บริโภค โรงพยาบาลจัตุรัส</p>
+        </div>
+
+        <!-- Form Type Tab Menu Bar -->
+        <div class="bg-slate-100 border-b border-slate-200 p-3 sm:px-8 no-print">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-2">
+                <span class="text-xs sm:text-sm font-semibold text-slate-600 mb-1 sm:mb-0 sm:mr-2">📂 เลือกประเภทฟอร์ม:</span>
+                <div class="inline-flex bg-slate-200 p-1 rounded-xl w-full sm:w-auto overflow-x-auto gap-1">
+                    <button type="button" id="tab_nursing" onclick="switchTab('nursing')" class="flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition whitespace-nowrap bg-white text-teal-800 shadow-xs">
+                        คลินิกพยาบาลและการผดุงครรภ์
+                    </button>
+                    <button type="button" id="tab_medical" onclick="switchTab('medical')" class="flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition whitespace-nowrap text-slate-600 hover:text-teal-800">
+                        คลินิกเวชกรรม/เฉพาะทาง
+                    </button>
+                    <button type="button" id="tab_dental" onclick="switchTab('dental')" class="flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition whitespace-nowrap text-slate-600 hover:text-teal-800">
+                        คลินิกทันตกรรม/เฉพาะทาง
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <form id="inspectionForm" class="p-6 sm:p-8 space-y-8">
+            <input type="hidden" id="editingRecordId" value="">
+            
+            <!-- ส่วนที่ 1: ข้อมูลทั่วไป -->
+            <section class="space-y-4">
+                <h2 class="text-lg font-semibold text-teal-800 border-b pb-2 flex items-center gap-2">
+                    <span class="bg-teal-100 text-teal-800 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                    ส่วนที่ 1 ข้อมูลทั่วไป <span class="text-xs text-red-600 font-normal ml-2">(จำเป็นต้องกรอกช่องที่มีเครื่องหมาย *)</span>
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">1. ชื่อคลินิก (ตามใบอนุญาต) <span class="text-red-500">*</span></label>
+                        <input type="text" name="clinic_name" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">2. ใบอนุญาตประกอบกิจการเลขที่ <span class="text-red-500">*</span></label>
+                        <input type="text" name="license_no" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">3. ชื่อผู้ประกอบกิจการ <span class="text-red-500">*</span></label>
+                        <input type="text" name="operator_name" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">4. ชื่อผู้ดำเนินการสถานพยาบาล <span class="text-red-500">*</span></label>
+                        <input type="text" name="director_name" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    </div>
+                    <div class="md:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">ตั้งอยู่เลขที่ <span class="text-red-500">*</span></label>
+                            <input type="text" name="addr_no" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">ซอย/ตรอก</label>
+                            <input type="text" name="addr_soi" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">หมู่ที่ <span class="text-red-500">*</span></label>
+                            <input type="text" name="addr_moo" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">ถนน</label>
+                            <input type="text" name="addr_road" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">ตำบล/แขวง <span class="text-red-500">*</span></label>
+                            <input type="text" name="addr_subdistrict" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">อำเภอ/เขต <span class="text-red-500">*</span></label>
+                            <input type="text" name="addr_district" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">จังหวัด <span class="text-red-500">*</span></label>
+                            <input type="text" name="addr_province" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">หมายเลขโทรศัพท์ <span class="text-red-500">*</span></label>
+                            <input type="text" name="phone" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">6. วันเวลาเปิดทำการ <span class="text-red-500">*</span></label>
+                        <input type="text" name="open_hours" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="เช่น จันทร์-ศุกร์ 08:00 - 20:00 น.">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1" id="lbl_found_prof">7. ชื่อผู้ประกอบวิชาชีพที่พบ <span class="text-red-500">*</span></label>
+                        <input type="text" name="found_professional" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1" id="lbl_prof_lic">เลขที่ใบอนุญาตให้ประกอบวิชาชีพ <span class="text-red-500">*</span></label>
+                        <input type="text" name="prof_license_no" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    </div>
+
+                    <!-- Dynamic Extra Fields -->
+                    <div id="dynamicExtraFields" class="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100"></div>
+                </div>
+            </section>
+
+            <!-- ส่วนที่ 2: การตรวจลักษณะคลินิก -->
+            <section class="space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2">
+                    <h2 class="text-lg font-semibold text-teal-800 flex items-center gap-2">
+                        <span class="bg-teal-100 text-teal-800 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                        ส่วนที่ 2 การตรวจลักษณะคลินิก <span class="text-xs text-red-600 font-normal ml-2">(จำเป็นต้องเลือกประเมินทุกข้อ)</span>
+                    </h2>
+                    <div class="flex gap-2 no-print">
+                        <button type="button" onclick="setAllCorrect(true)" class="text-xs bg-emerald-50 text-emerald-700 border border-emerald-300 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition font-medium">✓ เลือกถูกต้องทั้งหมด</button>
+                        <button type="button" onclick="setAllCorrect(false)" class="text-xs bg-slate-100 text-slate-600 border border-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition font-medium">ล้างค่าทั้งหมด</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                                <th class="p-3 w-12 text-center">ที่</th>
+                                <th class="p-3">รายการตรวจ</th>
+                                <th class="p-3 w-20 text-center">ถูกต้อง <span class="text-red-500">*</span></th>
+                                <th class="p-3 w-20 text-center">ไม่ถูกต้อง <span class="text-red-500">*</span></th>
+                                <th class="p-3 w-72">หมายเหตุ / ถ่ายภาพประกอบ <span class="text-red-500 text-xs">(บังคับเฉพาะรายการที่มีปุ่มถ่ายภาพ)</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="inspectionTableBody" class="divide-y divide-slate-200"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ส่วนสรุปผลและข้อเสนอแนะ -->
+            <section class="space-y-4 pt-4 border-t">
+                <h2 class="text-lg font-semibold text-teal-800">สรุปผลการตรวจและข้อเสนอแนะ</h2>
+                <textarea name="recommendation_summary" rows="4" class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-teal-500 focus:outline-none text-sm" placeholder="พิมพ์สรุปผลการตรวจและข้อเสนอแนะเพิ่มเติม..."></textarea>
+            </section>
+
+            <!-- ส่วนลายเซ็น -->
+            <section class="space-y-6 pt-4 border-t">
+                <h2 class="text-lg font-semibold text-teal-800">ลงนามผู้เกี่ยวข้อง</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- พนักงานเจ้าหน้าที่ -->
+                    <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
+                        <label class="block font-medium text-slate-700 text-sm">ลงชื่อ พนักงานเจ้าหน้าที่</label>
+                        <input type="text" name="officer_name" placeholder="พิมพ์ชื่อ-นามสกุล เจ้าหน้าที่" class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white">
+                        <div class="border border-dashed border-slate-300 rounded-lg bg-white p-2 text-center relative">
+                            <canvas id="sig-officer" class="w-full h-32 cursor-crosshair touch-none"></canvas>
+                            <button type="button" onclick="clearSignature('officer')" class="absolute top-2 right-2 text-xs text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200 no-print">ล้างลายเซ็น</button>
+                        </div>
+                    </div>
+
+                    <!-- ผู้ประกอบกิจการ / ผู้ดำเนินการ -->
+                    <div id="operator_sign_box" class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
+                        <label class="block font-medium text-slate-700 text-sm">
+                            ลงชื่อ ผู้ประกอบกิจการ/ผู้ดำเนินการ/ผู้ประกอบวิชาชีพ <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="operator_sign_name" name="operator_sign_name" required placeholder="พิมพ์ชื่อ-นามสกุล ผู้รับการตรวจ (จำเป็น)" class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        <div class="border border-dashed border-slate-300 rounded-lg bg-white p-2 text-center relative">
+                            <canvas id="sig-operator" class="w-full h-32 cursor-crosshair touch-none"></canvas>
+                            <button type="button" onclick="clearSignature('operator')" class="absolute top-2 right-2 text-xs text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200 no-print">ล้างลายเซ็น</button>
+                        </div>
+                        <p class="text-xs text-slate-500">ข้าพเจ้าขอรับรองว่าพนักงานเจ้าหน้าที่ได้ตรวจสถานพยาบาลเรียบร้อยแล้ว และไม่ได้ทำให้ทรัพย์สินของสถานพยาบาลเสียหาย สูญหาย หรือเสื่อมค่าแต่ประการใด</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Submit Button Footer -->
+            <div class="pt-6 border-t flex justify-end gap-3 no-print">
+                <button type="button" onclick="resetFormState()" id="btnCancelEditFooter" class="hidden bg-amber-600 hover:bg-amber-700 text-white font-medium px-6 py-2.5 rounded-xl shadow transition">ยกเลิกแก้ไข</button>
+                <button type="button" onclick="validateAndSaveData()" id="btnSaveDataFooter" class="bg-teal-700 hover:bg-teal-800 text-white font-medium px-6 py-2.5 rounded-xl shadow transition">บันทึกข้อมูลแบบฟอร์ม</button>
+            </div>
+        </form>
+
+        <!-- ส่วนรายการที่บันทึกแล้ว (ประวัติการตรวจส่วนกลางจาก Google Sheets) -->
+        <section class="p-6 sm:p-8 bg-slate-100/70 border-t border-slate-200 no-print space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-teal-800 flex items-center gap-2">
+                    📋 ประวัติการบันทึกการตรวจทั้งหมดในระบบ (ส่วนกลาง)
+                </h2>
+                <button type="button" onclick="loadHistoryList()" class="text-xs bg-white text-teal-700 border border-teal-300 px-3 py-1.5 rounded-lg hover:bg-teal-50 transition font-medium">🔄 รีเฟรชข้อมูล</button>
+            </div>
+            <div id="savedRecordsContainer" class="space-y-3">
+                <p class="text-sm text-slate-500">กำลังโหลดข้อมูลประวัติจากระบบ...</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Hidden File Input for Timestamp Photo capture -->
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handlePhotoCaptured(event)">
+
+    <script>
+        let globalHistoryData = [];
+        let photosData = {};
+        let currentActiveItemId = null;
+
+        function openSettings() {
+            let currentUrl = localStorage.getItem('clinic_webapp_url') || '';
+            let newUrl = prompt("กรุณากรอก Google Apps Script Web App URL สำหรับเชื่อมต่อระบบกลาง:", currentUrl);
+            if (newUrl !== null) {
+                localStorage.setItem('clinic_webapp_url', newUrl.trim());
+                if (newUrl.trim()) {
+                    alert("บันทึก Web App URL เรียบร้อยแล้ว!");
+                    loadHistoryList();
+                } else {
+                    alert("ล้างค่า Web App URL เรียบร้อย");
+                }
+            }
+        }
+
+        const emergencyMedsHtml = `
+            <div class="font-medium text-teal-900 mb-1">31. ยาฉุกเฉินประจำสถานพยาบาล:</div>
+            <ul class="list-disc list-inside text-xs text-slate-600 space-y-0.5 pl-2">
+                <li>(๑) ยาฉีด Adrenaline ๑ : ๑๐๐๐</li>
+                <li>(๒) ยาฉีด Steroid injection เช่น Dexamethasone injection หรือ Hydrocortisone</li>
+                <li>(๓) ยาฉีด Chlorpheniramine injection</li>
+                <li>(๔) ๕๐% Glucose injection</li>
+                <li>(๕) ยาอมใต้ลิ้นเพื่อขยายหลอดเลือดหัวใจ</li>
+            </ul>
+        `;
+
+        const formConfigs = {
+            nursing: {
+                title: "คลินิกการพยาบาลและการผดุงครรภ์",
+                profLabel: "7. ชื่อผู้ประกอบวิชาชีพที่พบ",
+                profLicLabel: "เลขที่ใบอนุญาตให้ประกอบวิชาชีพ",
+                extraFieldsHtml: "",
+                items: [
+                    { id: "1.1", label: "1.1", text: "สถานที่ยังอยู่ในสภาพที่ไม่ชำรุด มีการบำรุงรักษา ดูแลให้สะอาดเรียบร้อย และปลอดภัย", hasPhoto: false },
+                    { id: "1.2", label: "1.2", text: "พื้นที่สถานพยาบาลไม่มีกิจการอื่นปะปน", hasPhoto: false },
+                    { id: "1.3", label: "1.3", text: "พื้นที่สถานพยาบาลไม่ปะปนกับร้านขายยา", hasPhoto: false },
+                    { id: "1.4", label: "1.4", text: "บริเวณทั้งภายนอก และภายในสะอาด เป็นระเบียบ เรียบร้อย มีการระบายอากาศที่ดี ไม่อับทึบ", hasPhoto: false },
+                    { id: "1.5", label: "1.5", text: "กรณีติดตั้งเครื่องปรับอากาศ มีพัดลมดูดอากาศออกนอกตัวอาคาร", hasPhoto: false },
+                    { id: "1.6", label: "1.6", text: "ห้องตรวจ และห้องให้การรักษา เป็นสัดส่วนมิดชิด", hasPhoto: true },
+                    { id: "1.7", label: "1.7", text: "ข้อความโฆษณาสถานพยาบาล(ถ้ามี) ไม่เป็นเท็จ ไม่โอ้อวด หรือสื่อให้เข้าใจผิด", hasPhoto: false },
+                    { id: "1.8", label: "1.8", text: "มีเครื่องดับเพลิงขนาดเหมาะสม อยู่ในสภาพพร้อมใช้งาน ติดตั้งในที่มองเห็นได้ชัดเจน", hasPhoto: true },
+                    { id: "1.9", label: "1.9", text: "มีการแยกมูลฝอยติดเชื้อออกจากมูลฝอยทั่วไป และมีการกำจัดอย่างเหมาะสม", hasPhoto: true },
+                    { id: "1.10", label: "1.10", text: "มีการแสดงเครื่องหมายห้ามสูบบุหรี่", hasPhoto: true },
+                    { id: "2.1", label: "2.1", text: "มีป้ายชื่อสถานพยาบาลที่มีขนาด ตัวอักษร สี และชื่อถูกต้อง 1 ป้าย", hasPhoto: true },
+                    { id: "2.2", label: "2.2", text: "แสดงรูปถ่ายและเลขที่ใบประกอบโรคศิลปะ ถูกต้องและตรงกับผู้ประกอบโรคศิลปะที่ปฏิบัติงาน", hasPhoto: true },
+                    { id: "2.3", label: "2.3", text: "แสดงอัตราค่ารักษาพยาบาล ไว้ในที่เปิดเผย", hasPhoto: true },
+                    { id: "2.4", label: "2.4", text: "มีข้อความแจ้งให้สอบถามอัตราค่ารักษาพยาบาลได้ที่ใด", hasPhoto: true },
+                    { id: "2.5", label: "2.5", text: "แสดงคำประกาศสิทธิผู้ป่วยในที่เปิดเผย", hasPhoto: true },
+                    { id: "3.1", label: "3.1", text: "สถานที่ตั้งคลินิก ถูกต้องตรงตามใบอนุญาต", hasPhoto: false },
+                    { id: "3.2", label: "3.2", text: "แสดงใบอนุญาตประกอบกิจการและใบอนุญาตดำเนินการสถานพยาบาลในที่เปิดเผย", hasPhoto: true },
+                    { id: "3.3", label: "3.3", text: "ใบอนุญาตดำเนินการสถานพยาบาลต่ออายุทุก 2 ปี", hasPhoto: true },
+                    { id: "3.4", label: "3.4", text: "แสดงหลักฐานการชำระค่าธรรมเนียม (ส.พ.12) ไว้บริเวณทางเข้าสถานพยาบาล", hasPhoto: true },
+                    { id: "3.5", label: "3.5", text: "สมุดทะเบียนสถานพยาบาลให้พนักงานเจ้าหน้าที่ บันทึกการตรวจ", hasPhoto: false },
+                    { id: "3.6", label: "3.6", text: "การประกอบกิจการตรงตามลักษณะที่ขออนุญาต", hasPhoto: false },
+                    { id: "3.7", label: "3.7", text: "พบผู้รับอนุญาตให้ดำเนินการสถานพยาบาล อยู่ดูแลคลินิก", hasPhoto: false },
+                    { id: "3.8", label: "3.8", text: "มีผู้ประกอบวิชาชีพการพยาบาลและการผดุงครรภ์ปฏิบัติงานในสถานพยาบาลตามเวลาเปิด", hasPhoto: false },
+                    { id: "4.1", label: "4.1", text: "เครื่องใช้ทั่วไปประจำสถานพยาบาลมีตามจำนวนที่เหมาะสม", hasPhoto: false },
+                    { id: "4.2", label: "4.2", text: "อุปกรณ์ เครื่องมือ เครื่องใช้ ยา และเวชภัณฑ์ที่จำเป็นตามลักษณะสถานพยาบาล", hasPhoto: false },
+                    { id: "4.3", label: "4.3", text: "มีระบบควบคุมการติดเชื้อที่เหมาะสม (แช่สารเคมี, นึ่งแรงดันไอน้ำ, ต้ม ฯลฯ)", hasPhoto: false },
+                    { id: "4.4", label: "4.4", text: "มีระบบประสานการส่งต่อผู้ป่วยไปยังสถานพยาบาลใกล้เคียง หากเกิดภาวะฉุกเฉิน", hasPhoto: true },
+                    { id: "5.1", label: "5.1", text: "มีการบันทึกทะเบียนผู้ป่วยที่มารับบริการประจำวัน", hasPhoto: true },
+                    { id: "5.2", label: "5.2", text: "จัดทำบัตรประจำตัวผู้ป่วย OPD card และฉลากยาบันทึกข้อมูลครบถ้วนตามกฎกระทรวง", hasPhoto: true },
+                    { id: "5.3", label: "5.3", text: "มีการจัดทำและส่งรายงานประจำปีของสถานพยาบาล (สพ. 23) ถูกต้อง", hasPhoto: false },
+                    { id: "31", label: "31", text: "ถุงบีบลมเพื่อช่วยหายใจพร้อมหน้ากากครอบช่วยการหายใจ (Ambubag)", hasPhoto: true },
+                    { id: "32", label: "32", text: "มีแผนและขั้นตอนการส่งต่อผู้ป่วยกรณีฉุกเฉิน", hasPhoto: true }
+                ]
+            },
+            medical: {
+                title: "คลินิกเวชกรรมและคลินิกเวชกรรมเฉพาะทาง",
+                profLabel: "7. ผู้ประกอบวิชาชีพเวชกรรมที่พบชื่อ",
+                profLicLabel: "เลขที่ใบอนุญาตให้ประกอบวิชาชีพเวชกรรม",
+                extraFieldsHtml: `
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">8. แพทย์ที่ปฏิบัติงานทั้งหมด (คน) <span class="text-red-500">*</span></label>
+                        <input type="number" name="total_doctors" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">9. เจ้าหน้าที่ผู้ช่วยปฏิบัติงาน (คน) <span class="text-red-500">*</span></label>
+                        <input type="number" name="total_assistants" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">10. บริการเพิ่มเติม <span class="text-red-500">*</span></label>
+                        <input type="text" name="extra_services" required placeholder="เช่น ศัลยกรรม, ฝังเข็ม, เอ็กซเรย์" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    </div>
+                `,
+                items: [
+                    { id: "1.1", label: "1.1", text: "สถานที่ยังอยู่ในสภาพที่ไม่ชำรุด มีการบำรุงรักษา ดูแลให้สะอาดเรียบร้อย และปลอดภัย", hasPhoto: false },
+                    { id: "1.2", label: "1.2", text: "พื้นที่สถานพยาบาลไม่มีกิจการอื่นปะปน", hasPhoto: false },
+                    { id: "1.3", label: "1.3", text: "พื้นที่สถานพยาบาลไม่ปะปนกับร้านขายยา", hasPhoto: false },
+                    { id: "1.4", label: "1.4", text: "บริเวณทั้งภายนอก และภายในสะอาด เป็นระเบียบ เรียบร้อย มีการระบายอากาศที่ดี ไม่อับทึบ", hasPhoto: false },
+                    { id: "1.5", label: "1.5", text: "กรณีติดตั้งเครื่องปรับอากาศ มีพัดลมดูดอากาศออกนอกตัวอาคาร", hasPhoto: false },
+                    { id: "1.6", label: "1.6", text: "ห้องตรวจ และห้องให้การรักษา เป็นสัดส่วนมิดชิด", hasPhoto: true },
+                    { id: "1.7", label: "1.7", text: "ข้อความโฆษณาสถานพยาบาล(ถ้ามี) ไม่เป็นเท็จ ไม่โอ้อวด หรือสื่อให้เข้าใจผิด", hasPhoto: false },
+                    { id: "1.8", label: "1.8", text: "มีเครื่องดับเพลิงขนาดเหมาะสม อยู่ในสภาพพร้อมใช้งาน ติดตั้งในที่มองเห็นได้ชัดเจน", hasPhoto: true },
+                    { id: "1.9", label: "1.9", text: "มีการแยกมูลฝอยติดเชื้อออกจากมูลฝอยทั่วไป และมีการกำจัดอย่างเหมาะสม", hasPhoto: true },
+                    { id: "1.10", label: "1.10", text: "มีการแสดงเครื่องหมายห้ามสูบบุหรี่", hasPhoto: true },
+                    { id: "2.1", label: "2.1", text: "มีป้ายชื่อสถานพยาบาลที่มีขนาด ตัวอักษร สี และชื่อถูกต้อง 1 ป้าย", hasPhoto: true },
+                    { id: "2.2", label: "2.2", text: "แสดงรูปถ่ายและเลขที่ใบประกอบวิชาชีพ ถูกต้องและตรงกับผู้ประกอบวิชาชีพที่ปฏิบัติงาน", hasPhoto: true },
+                    { id: "2.3", label: "2.3", text: "แสดงอัตราค่ารักษาพยาบาล ไว้ในที่เปิดเผย", hasPhoto: true },
+                    { id: "2.4", label: "2.4", text: "มีข้อความแจ้งให้สอบถามอัตราค่ารักษาพยาบาลได้ที่ใด", hasPhoto: true },
+                    { id: "2.5", label: "2.5", text: "แสดงคำประกาศสิทธิผู้ป่วยในที่เปิดเผย", hasPhoto: true },
+                    { id: "3.1", label: "3.1", text: "สถานที่ตั้งคลินิก ถูกต้องตรงตามใบอนุญาต", hasPhoto: false },
+                    { id: "3.2", label: "3.2", text: "แสดงใบอนุญาตประกอบกิจการและใบอนุญาตดำเนินการสถานพยาบาลในที่เปิดเผย", hasPhoto: true },
+                    { id: "3.3", label: "3.3", text: "ใบอนุญาตดำเนินการสถานพยาบาลต่ออายุทุก 2 ปี", hasPhoto: true },
+                    { id: "3.4", label: "3.4", text: "แสดงหลักฐานการชำระค่าธรรมเนียม (ส.พ.12) ไว้บริเวณทางเข้าสถานพยาบาล", hasPhoto: true },
+                    { id: "3.5", label: "3.5", text: "สมุดทะเบียนสถานพยาบาลให้พนักงานเจ้าหน้าที่ บันทึกการตรวจ", hasPhoto: false },
+                    { id: "3.6", label: "3.6", text: "การประกอบกิจการตรงตามลักษณะที่ขออนุญาต", hasPhoto: false },
+                    { id: "3.7", label: "3.7", text: "พบผู้รับอนุญาตให้ดำเนินการสถานพยาบาล อยู่ดูแลคลินิก", hasPhoto: false },
+                    { id: "3.8", label: "3.8", text: "มีผู้ประกอบวิชาชีพเวชกรรมปฏิบัติงานในสถานพยาบาลตามเวลาที่เปิดดำเนินการ", hasPhoto: false },
+                    { id: "4.1", label: "4.1", text: "เครื่องใช้ทั่วไปประจำสถานพยาบาลมีตามจำนวนที่เหมาะสม", hasPhoto: false },
+                    { id: "4.2", label: "4.2", text: "อุปกรณ์ เครื่องมือ เครื่องใช้ ยา และเวชภัณฑ์ที่จำเป็นตามลักษณะสถานพยาบาล จำนวนเหมาะสม", hasPhoto: false },
+                    { id: "4.3", label: "4.3", text: "มีระบบควบคุมการติดเชื้อที่เหมาะสม (แช่สารเคมี, นึ่งแรงดันไอน้ำ, ต้ม ฯลฯ)", hasPhoto: false },
+                    { id: "4.4", label: "4.4", text: "มีระบบประสานการส่งต่อผู้ป่วยไปยังสถานพยาบาลใกล้เคียง หากเกิดภาวะฉุกเฉิน", hasPhoto: true },
+                    { id: "5.1", label: "5.1", text: "มีการบันทึกทะเบียนผู้ป่วยที่มารับบริการประจำวัน", hasPhoto: true },
+                    { id: "5.2", label: "5.2", text: "จัดทำบัตรประจำตัวผู้ป่วย OPD card และฉลากยาบันทึกข้อมูลครบถ้วนตามกฎกระทรวง", hasPhoto: true },
+                    { id: "5.3", label: "5.3", text: "มีการจัดทำและส่งรายงานประจำปีของสถานพยาบาล (สพ. 23) ถูกต้อง", hasPhoto: false },
+                    { id: "31", label: "31", textHtml: emergencyMedsHtml, hasPhoto: true }
+                ]
+            },
+            dental: {
+                title: "คลินิกทันตกรรมและคลินิกทันตกรรมเฉพาะทาง",
+                profLabel: "7. ชื่อผู้ประกอบวิชาชีพทันตกรรมที่พบ",
+                profLicLabel: "เลขที่ใบอนุญาตให้ประกอบวิชาชีพทันตกรรม",
+                extraFieldsHtml: `
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">8. ทันตแพทย์ทั้งหมด / ยูนิตทำฟัน <span class="text-red-500">*</span></label>
+                        <div class="flex gap-2">
+                            <input type="number" name="total_dentists" required placeholder="แพทย์" class="w-1/2 border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                            <input type="number" name="total_dental_units" required placeholder="ยูนิต" class="w-1/2 border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">9. ผู้ช่วย / X-ray / Autoclave <span class="text-red-500">*</span></label>
+                        <div class="grid grid-cols-3 gap-1">
+                            <input type="number" name="total_assistants" required placeholder="ผู้ช่วย" class="border border-slate-300 rounded-lg p-2.5 text-xs">
+                            <input type="number" name="total_xray" required placeholder="X-ray" class="border border-slate-300 rounded-lg p-2.5 text-xs">
+                            <input type="number" name="total_autoclave" required placeholder="Autoclave" class="border border-slate-300 rounded-lg p-2.5 text-xs">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">10. บริการเพิ่มเติม <span class="text-red-500">*</span></label>
+                        <input type="text" name="extra_services" required placeholder="เช่น จัดฟัน, รากเทียม" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    </div>
+                `,
+                items: [
+                    { id: "1.1", label: "1.1", text: "สถานที่ยังอยู่ในสภาพที่ไม่ชำรุด มีการบำรุงรักษา ดูแลให้สะอาดเรียบร้อย และปลอดภัย", hasPhoto: false },
+                    { id: "1.2", label: "1.2", text: "พื้นที่สถานพยาบาลไม่มีกิจการอื่นปะปน", hasPhoto: false },
+                    { id: "1.3", label: "1.3", text: "พื้นที่สถานพยาบาลไม่ปะปนกับร้านขายยา", hasPhoto: false },
+                    { id: "1.4", label: "1.4", text: "บริเวณทั้งภายนอก และภายในสะอาด เป็นระเบียบ เรียบร้อย มีการระบายอากาศที่ดี ไม่อับทึบ", hasPhoto: false },
+                    { id: "1.5", label: "1.5", text: "กรณีติดตั้งเครื่องปรับอากาศ มีพัดลมดูดอากาศออกนอกตัวอาคาร", hasPhoto: false },
+                    { id: "1.6", label: "1.6", text: "ห้องตรวจ และห้องให้การรักษา เป็นสัดส่วนมิดชิด", hasPhoto: true },
+                    { id: "1.7", label: "1.7", text: "ข้อความโฆษณาสถานพยาบาล(ถ้ามี) ไม่เป็นเท็จ ไม่โอ้อวด หรือสื่อให้เข้าใจผิด", hasPhoto: false },
+                    { id: "1.8", label: "1.8", text: "มีเครื่องดับเพลิงขนาดเหมาะสม อยู่ในสภาพพร้อมใช้งาน ติดตั้งในที่มองเห็นได้ชัดเจน", hasPhoto: true },
+                    { id: "1.9", label: "1.9", text: "มีการแยกมูลฝอยติดเชื้อออกจากมูลฝอยทั่วไป และมีการกำจัดอย่างเหมาะสม", hasPhoto: true },
+                    { id: "1.10", label: "1.10", text: "มีการแสดงเครื่องหมายห้ามสูบบุหรี่", hasPhoto: true },
+                    { id: "2.1", label: "2.1", text: "มีป้ายชื่อสถานพยาบาลที่มีขนาด ตัวอักษร สี และชื่อถูกต้อง 1 ป้าย", hasPhoto: true },
+                    { id: "2.2", label: "2.2", text: "แสดงรูปถ่ายและเลขที่ใบประกอบวิชาชีพ ถูกต้องและตรงกับผู้ประกอบวิชาชีพที่ปฏิบัติงาน", hasPhoto: true },
+                    { id: "2.3", label: "2.3", text: "แสดงอัตราค่ารักษาพยาบาล ไว้ในที่เปิดเผย", hasPhoto: true },
+                    { id: "2.4", label: "2.4", text: "มีข้อความแจ้งให้สอบถามอัตราค่ารักษาพยาบาลได้ที่ใด", hasPhoto: true },
+                    { id: "2.5", label: "2.5", text: "แสดงคำประกาศสิทธิผู้ป่วยในที่เปิดเผย", hasPhoto: true },
+                    { id: "3.1", label: "3.1", text: "สถานที่ตั้งคลินิก ถูกต้องตรงตามใบอนุญาต", hasPhoto: false },
+                    { id: "3.2", label: "3.2", text: "แสดงใบอนุญาตประกอบกิจการและใบอนุญาตดำเนินการสถานพยาบาลในที่เปิดเผย", hasPhoto: true },
+                    { id: "3.3", label: "3.3", text: "ใบอนุญาตดำเนินการสถานพยาบาลต่ออายุทุก 2 ปี", hasPhoto: true },
+                    { id: "3.4", label: "3.4", text: "แสดงหลักฐานการชำระค่าธรรมเนียม (ส.พ.12) ไว้บริเวณทางเข้าสถานพยาบาล", hasPhoto: true },
+                    { id: "3.5", label: "3.5", text: "สมุดทะเบียนสถานพยาบาลให้พนักงานเจ้าหน้าที่ บันทึกการตรวจ", hasPhoto: false },
+                    { id: "3.6", label: "3.6", text: "การประกอบกิจการตรงตามลักษณะที่ขออนุญาต", hasPhoto: false },
+                    { id: "3.7", label: "3.7", text: "พบผู้รับอนุญาตให้ดำเนินการสถานพยาบาล อยู่ดูแลคลินิก", hasPhoto: false },
+                    { id: "3.8", label: "3.8", text: "มีผู้ประกอบวิชาชีพทันตกรรมปฏิบัติงานในสถานพยาบาลตามเวลาที่เปิดดำเนินการ", hasPhoto: false },
+                    { id: "4.1", label: "4.1", text: "เครื่องใช้ทั่วไปประจำสถานพยาบาลมีตามจำนวนที่เหมาะสม", hasPhoto: false },
+                    { id: "4.2", label: "4.2", text: "อุปกรณ์ เครื่องมือ เครื่องใช้ ยา และเวชภัณฑ์ที่จำเป็นตามลักษณะสถานพยาบาล", hasPhoto: false },
+                    { id: "4.3", label: "4.3", text: "มีระบบควบคุมการติดเชื้อที่เหมาะสม (แช่สารเคมี, นึ่งแรงดันไอน้ำ, ต้ม ฯลฯ)", hasPhoto: false },
+                    { id: "4.4", label: "4.4", text: "มีระบบประสานการส่งต่อผู้ป่วยไปยังสถานพยาบาลใกล้เคียง หากเกิดภาวะฉุกเฉิน", hasPhoto: true },
+                    { id: "5.1", label: "5.1", text: "มีการบันทึกทะเบียนผู้ป่วยที่มารับบริการประจำวัน", hasPhoto: true },
+                    { id: "5.2", label: "5.2", text: "จัดทำบัตรประจำตัวผู้ป่วย OPD card และฉลากยาบันทึกข้อมูลครบถ้วนตามกฎกระทรวง", hasPhoto: true },
+                    { id: "5.3", label: "5.3", text: "มีการจัดทำและส่งรายงานประจำปีของสถานพยาบาล (สพ. 23) ถูกต้อง", hasPhoto: false },
+                    { id: "31", label: "31", textHtml: emergencyMedsHtml, hasPhoto: true }
+                ]
+            }
+        };
+
+        let currentActiveTab = 'nursing';
+        let sigPads = {};
+        let isSigned = { officer: false, operator: false };
+
+        function switchTab(type) {
+            currentActiveTab = type;
+            ['nursing', 'medical', 'dental'].forEach(t => {
+                const btn = document.getElementById(`tab_${t}`);
+                if (t === type) {
+                    btn.className = "flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition whitespace-nowrap bg-white text-teal-800 shadow-xs";
+                } else {
+                    btn.className = "flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition whitespace-nowrap text-slate-600 hover:text-teal-800";
+                }
+            });
+
+            const config = formConfigs[type];
+            document.getElementById('lbl_found_prof').innerHTML = `${config.profLabel} <span class="text-red-500">*</span>`;
+            document.getElementById('lbl_prof_lic').innerHTML = `เลขที่ใบอนุญาตให้ประกอบวิชาชีพ <span class="text-red-500">*</span>`;
+            document.getElementById('dynamicExtraFields').innerHTML = config.extraFieldsHtml;
+
+            const tbody = document.getElementById('inspectionTableBody');
+            tbody.innerHTML = '';
+            config.items.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.id = `row_${item.id.replace('.', '_')}`;
+                tr.className = "hover:bg-slate-50 border-b border-slate-100 transition print-break-inside";
+                const itemContent = item.textHtml ? item.textHtml : item.text;
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-medium text-slate-500">${index + 1}</td>
+                    <td class="p-3 text-slate-700">${itemContent}</td>
+                    <td class="p-3 text-center">
+                        <input type="radio" name="check_${item.id.replace('.', '_')}" value="correct" class="w-4 h-4 text-teal-600 focus:ring-teal-500">
+                    </td>
+                    <td class="p-3 text-center">
+                        <input type="radio" name="check_${item.id.replace('.', '_')}" value="incorrect" class="w-4 h-4 text-red-600 focus:ring-red-500">
+                    </td>
+                    <td class="p-3">
+                        <div class="flex flex-col gap-2">
+                            <input type="text" name="note_${item.id.replace('.', '_')}" placeholder="หมายเหตุ..." class="w-full border border-slate-300 rounded-lg p-1.5 text-xs focus:ring-1 focus:ring-teal-500 focus:outline-none">
+                            ${item.hasPhoto ? `
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <button type="button" onclick="triggerCamera('${item.id}')" id="btn_photo_${item.id}" class="text-xs bg-amber-50 text-amber-800 border border-amber-300 px-2.5 py-1 rounded hover:bg-amber-100 transition font-medium flex items-center gap-1 shadow-xs no-print">
+                                        📷 ถ่ายภาพบังคับ (${item.label})
+                                    </button>
+                                    <div id="thumb_container_${item.id}" class="flex items-center gap-1"></div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            photosData = {};
+        }
+
+        function setAllCorrect(isCorrect) {
+            const config = formConfigs[currentActiveTab];
+            config.items.forEach((item) => {
+                const radios = document.querySelectorAll(`input[name="check_${item.id.replace('.', '_')}"]`);
+                radios.forEach(r => {
+                    if (isCorrect && r.value === 'correct') r.checked = true;
+                    if (!isCorrect) r.checked = false;
+                });
+            });
+        }
+
+        function triggerCamera(itemId) {
+            currentActiveItemId = itemId;
+            document.getElementById('cameraInput').click();
+        }
+
+        function handlePhotoCaptured(event) {
+            const file = event.target.files[0];
+            if (!file || !currentActiveItemId) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    
+                    ctx.drawImage(img, 0, 0);
+
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+                    const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    const timestampText = `📅 ${dateStr} ⏰ ${timeStr}`;
+
+                    const fontSize = Math.max(20, Math.floor(canvas.width / 35));
+                    ctx.font = `bold ${fontSize}px sans-serif`;
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                    
+                    const textMetrics = ctx.measureText(timestampText);
+                    const padding = fontSize * 0.8;
+                    const x = canvas.width - textMetrics.width - padding * 2 - 20;
+                    const y = canvas.height - fontSize - padding * 2 - 20;
+
+                    ctx.fillRect(x, y, textMetrics.width + padding * 2, fontSize + padding * 1.5);
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillText(timestampText, x + padding, y + fontSize + padding * 0.5);
+
+                    photosData[currentActiveItemId] = canvas.toDataURL('image/jpeg', 0.85);
+                    renderThumbnail(currentActiveItemId);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function renderThumbnail(itemId) {
+            const container = document.getElementById(`thumb_container_${itemId}`);
+            const btn = document.getElementById(`btn_photo_${itemId}`);
+            if (!container) return;
+            const dataUrl = photosData[itemId];
+            if (dataUrl) {
+                if (btn) {
+                    btn.classList.remove('bg-amber-50', 'text-amber-800', 'border-amber-300');
+                    btn.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
+                    btn.innerHTML = `✓ ถ่ายภาพแล้ว (เปลี่ยน)`;
+                }
+                container.innerHTML = `
+                    <div class="relative group inline-block">
+                        <img src="${dataUrl}" class="w-10 h-10 object-cover rounded border border-slate-300 cursor-pointer shadow-sm" onclick="window.open('${dataUrl}')" title="คลิกเพื่อดูรูปใหญ่">
+                        <button type="button" onclick="removePhoto('${itemId}')" class="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center shadow hover:bg-red-700 no-print">×</button>
+                    </div>
+                    <div class="print-photo-container hidden mt-1">
+                        <img src="${dataUrl}" class="print-photo-img max-w-[280px] rounded shadow">
+                    </div>
+                `;
+            } else {
+                if (btn) {
+                    btn.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
+                    btn.classList.add('bg-amber-50', 'text-amber-800', 'border-amber-300');
+                    const targetItem = formConfigs[currentActiveTab].items.find(i => i.id === itemId);
+                    btn.innerHTML = `📷 ถ่ายภาพบังคับ (${targetItem ? targetItem.label : ''})`;
+                }
+                container.innerHTML = '';
+            }
+        }
+
+        function removePhoto(itemId) {
+            delete photosData[itemId];
+            renderThumbnail(itemId);
+        }
+
+        function initSignatures() {
+            ['officer', 'operator'].forEach(type => {
+                const canvas = document.getElementById(`sig-${type}`);
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                const ctx = canvas.getContext('2d');
+                ctx.scale(ratio, ratio);
+
+                let isDrawing = false;
+                let lastX = 0;
+                let lastY = 0;
+
+                function getPos(e) {
+                    const rect = canvas.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    return { x: clientX - rect.left, y: clientY - rect.top };
+                }
+
+                function startDraw(e) {
+                    isDrawing = true;
+                    isSigned[type] = true;
+                    const pos = getPos(e);
+                    lastX = pos.x; lastY = pos.y;
+                }
+
+                function draw(e) {
+                    if (!isDrawing) return;
+                    e.preventDefault();
+                    const pos = getPos(e);
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.strokeStyle = '#0f172a';
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                    lastX = pos.x; lastY = pos.y;
+                }
+
+                function stopDraw() { isDrawing = false; }
+
+                canvas.addEventListener('mousedown', startDraw);
+                canvas.addEventListener('mousemove', draw);
+                canvas.addEventListener('mouseup', stopDraw);
+                canvas.addEventListener('mouseleave', stopDraw);
+                canvas.addEventListener('touchstart', startDraw);
+                canvas.addEventListener('touchmove', draw);
+                canvas.addEventListener('touchend', stopDraw);
+
+                sigPads[type] = { canvas, ctx };
+            });
+        }
+
+        function clearSignature(type) {
+            const pad = sigPads[type];
+            if (pad) {
+                pad.ctx.clearRect(0, 0, pad.canvas.width, pad.canvas.height);
+                isSigned[type] = false;
+            }
+        }
+
+        async function validateAndSaveData() {
+            const requiredInputs = document.querySelectorAll('#inspectionForm input[required]');
+            for (let input of requiredInputs) {
+                if (!input.value.trim()) {
+                    alert('กรุณากรอกข้อมูลในส่วนที่ 1 (ข้อมูลทั่วไป) ให้ครบถ้วนทุกช่องที่มีเครื่องหมาย * ครับ');
+                    input.focus();
+                    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
+            }
+
+            const config = formConfigs[currentActiveTab];
+            for (let item of config.items) {
+                const checkedRadio = document.querySelector(`input[name="check_${item.id.replace('.', '_')}"]:checked`);
+                if (!checkedRadio) {
+                    alert(`กรุณาเลือกผลการประเมินในส่วนที่ 2 รายการข้อ ${item.label} ก่อนบันทึกครับ`);
+                    const row = document.getElementById(`row_${item.id.replace('.', '_')}`);
+                    if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
+            }
+
+            const requiredPhotoItems = config.items.filter(i => i.hasPhoto);
+            for (let item of requiredPhotoItems) {
+                if (!photosData[item.id]) {
+                    const labelText = item.text || 'รายการบังคับถ่ายภาพ';
+                    alert(`กรุณาถ่ายภาพหลักฐานในรายการข้อ ${item.label} (${labelText}) ก่อนบันทึกข้อมูลครับ`);
+                    const btn = document.getElementById(`btn_photo_${item.id}`);
+                    if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
+            }
+
+            const operatorSignNameInput = document.getElementById('operator_sign_name');
+            if (!operatorSignNameInput || !operatorSignNameInput.value.trim()) {
+                alert('กรุณาพิมพ์ชื่อ-นามสกุล ในช่องผู้รับการตรวจก่อนบันทึกครับ');
+                return;
+            }
+
+            if (!isSigned['operator']) {
+                alert('กรุณาวาดลายเซ็นผู้รับการตรวจก่อนบันทึกครับ');
+                return;
+            }
+
+            const formData = new FormData(document.getElementById('inspectionForm'));
+            const formObj = Object.fromEntries(formData.entries());
+            formObj.form_type_title = config.title;
+            formObj.active_tab = currentActiveTab;
+            
+            const officerSig = document.getElementById('sig-officer').toDataURL();
+            const operatorSig = document.getElementById('sig-operator').toDataURL();
+
+            const record = {
+                id: 'rec_' + Date.now(),
+                timestamp: new Date().toLocaleString('th-TH', { dateStyle: 'full', timeStyle: 'medium' }),
+                formType: config.title,
+                activeTab: currentActiveTab,
+                fields: formObj,
+                photos: { ...photosData },
+                signatures: { officer: officerSig, operator: operatorSig }
+            };
+
+            const cloudUrl = localStorage.getItem('clinic_webapp_url');
+            if (!cloudUrl || cloudUrl.trim() === "") {
+                alert("กรุณากดปุ่ม ⚙️ ตั้งค่าลิงก์ระบบ เพื่อใส่ Google Apps Script Web App URL ก่อนครับ");
+                return;
+            }
+
+            try {
+                const saveBtn = document.getElementById('btnSaveDataFooter');
+                saveBtn.innerText = "กำลังบันทึกลงระบบกลาง...";
+                saveBtn.disabled = true;
+
+                await fetch(cloudUrl.trim(), {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(record)
+                });
+
+                alert('บันทึกข้อมูลเข้าสู่ระบบกลางเรียบร้อยแล้ว!');
+                saveBtn.innerText = "บันทึกข้อมูลแบบฟอร์ม";
+                saveBtn.disabled = false;
+                
+                // เคลียร์หน้าจอ และโหลดประวัติใหม่
+                resetFormState();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setTimeout(() => { loadHistoryList(); }, 1000);
+            } catch (err) {
+                console.error("Cloud Sync Error:", err);
+                alert("เกิดข้อผิดพลาดในการเชื่อมต่อระบบกลาง กรุณาตรวจสอบลิงก์ Web App URL");
+                const saveBtn = document.getElementById('btnSaveDataFooter');
+                saveBtn.innerText = "บันทึกข้อมูลแบบฟอร์ม";
+                saveBtn.disabled = false;
+            }
+        }
+
+        async function loadHistoryList() {
+            const container = document.getElementById('savedRecordsContainer');
+            const cloudUrl = localStorage.getItem('clinic_webapp_url');
+            
+            if (!cloudUrl || cloudUrl.trim() === "") {
+                container.innerHTML = `<p class="text-sm text-red-500">กรุณากดปุ่ม "⚙️ ตั้งค่าลิงก์ระบบ" ด้านบนเพื่อใส่ Web App URL สำหรับดึงประวัติการตรวจ</p>`;
+                return;
+            }
+
+            container.innerHTML = `<p class="text-sm text-slate-500">⏳ กำลังโหลดประวัติการบันทึกจากระบบกลาง...</p>`;
+
+            try {
+                const res = await fetch(cloudUrl.trim());
+                const result = await res.json();
+
+                if (result.status === "success" && result.data && result.data.length > 0) {
+                    globalHistoryData = result.data;
+                    container.innerHTML = '';
+                    result.data.forEach((rec, idx) => {
+                        const clinicName = rec.fields.clinic_name || 'ไม่ระบุชื่อคลินิก';
+                        const pCount = rec.photos ? Object.keys(rec.photos).length : 0;
+                        const div = document.createElement('div');
+                        div.className = "bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3";
+                        div.innerHTML = `
+                            <div>
+                                <div class="font-bold text-teal-800 text-sm sm:text-base">${idx + 1}. ${clinicName} <span class="text-xs bg-teal-50 text-teal-700 px-2 py-0.5 rounded border border-teal-200">${rec.formType}</span></div>
+                                <div class="text-xs text-slate-500 mt-1">บันทึกเมื่อ: ${rec.timestamp} | เจ้าหน้าที่: ${rec.fields.officer_name || '-'} | รูปถ่าย: ${pCount} รูป</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="viewAndPrintRecord('${rec.id}')" class="text-xs bg-teal-600 text-white px-3.5 py-2 rounded-lg hover:bg-teal-700 transition font-medium flex items-center gap-1">
+                                    👁️ เปิดดู / 🖨️ พิมพ์
+                                </button>
+                                <button type="button" onclick="deleteRecord('${rec.id}', '${clinicName}')" class="text-xs bg-red-50 text-red-600 border border-red-200 px-3 py-2 rounded-lg hover:bg-red-100 transition font-medium flex items-center gap-1">
+                                    🗑️ ลบ
+                                </button>
+                            </div>
+                        `;
+                        container.appendChild(div);
+                    });
+                } else {
+                    container.innerHTML = `<p class="text-sm text-slate-500">ยังไม่มีประวัติการบันทึกในระบบกลาง</p>`;
+                }
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<p class="text-sm text-red-500">ไม่สามารถเชื่อมต่อดึงข้อมูลจาก Google Sheets ได้ กรุณาตรวจสอบลิงก์ Web App URL</p>`;
+            }
+        }
+
+        async function deleteRecord(id, clinicName) {
+            const isConfirm = confirm(`คุณต้องการลบประวัติการตรวจของ "${clinicName}" ออกจากระบบใช่หรือไม่?`);
+            if (!isConfirm) return;
+
+            const cloudUrl = localStorage.getItem('clinic_webapp_url');
+            if (!cloudUrl || cloudUrl.trim() === "") return;
+
+            try {
+                const resContainer = document.getElementById('savedRecordsContainer');
+                resContainer.innerHTML = `<p class="text-sm text-red-600 font-medium">⏳ กำลังลบข้อมูลออกจากระบบ...</p>`;
+
+                await fetch(cloudUrl.trim(), {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "delete", id: id })
+                });
+
+                alert("ลบข้อมูลออกจากระบบเรียบร้อยแล้ว!");
+                setTimeout(() => { loadHistoryList(); }, 1000);
+            } catch (err) {
+                console.error("Delete Error:", err);
+                alert("เกิดข้อผิดพลาดในการลบข้อมูล กรุณาลองใหม่อีกครั้ง");
+                loadHistoryList();
+            }
+        }
+
+        function viewAndPrintRecord(id) {
+            const password = prompt("กรุณากรอกรหัสผ่านเพื่อเปิดดู/พิมพ์รายงาน:");
+            if (password === null) return;
+            if (password !== "1234") {
+                alert("รหัสผ่านไม่ถูกต้อง!");
+                return;
+            }
+
+            let rec = globalHistoryData.find(r => r.id === id);
+            if (!rec) return;
+
+            if (rec.activeTab) {
+                switchTab(rec.activeTab);
+            }
+
+            // นำค่าทั่วไปและหมายเหตุกลับเข้าสู่ Input
+            for (let key in rec.fields) {
+                const val = rec.fields[key];
+                
+                // จัดการช่อง Radio
+                if (key.indexOf('check_') === 0) {
+                    const cleanCode = key.replace('check_', '');
+                    const radios = document.querySelectorAll(`input[name="check_${cleanCode}"]`);
+                    radios.forEach(r => {
+                        if (r.value === val) r.checked = true;
+                    });
+                } else {
+                    // จัดการ Text/Number Input ต่างๆ
+                    const inputs = document.querySelectorAll(`[name="${key}"]`);
+                    inputs.forEach(input => {
+                        if (input.type !== 'radio') {
+                            input.value = val;
+                        }
+                    });
+                }
+            }
+
+            // ดึงภาพถ่ายกลับมาแสดง
+            photosData = { ...rec.photos };
+            const config = formConfigs[currentActiveTab];
+            config.items.forEach(item => {
+                if (item.hasPhoto) {
+                    renderThumbnail(item.id);
+                }
+            });
+
+            // ดึงลายเซ็นกลับมาแสดง
+            if (rec.signatures) {
+                if (rec.signatures.officer) {
+                    const imgO = new Image();
+                    imgO.onload = () => {
+                        sigPads['officer'].ctx.clearRect(0,0,sigPads['officer'].canvas.width,sigPads['officer'].canvas.height);
+                        sigPads['officer'].ctx.drawImage(imgO, 0, 0, sigPads['officer'].canvas.width, sigPads['officer'].canvas.height);
+                    };
+                    imgO.src = rec.signatures.officer;
+                }
+                if (rec.signatures.operator) {
+                    const imgOp = new Image();
+                    imgOp.onload = () => {
+                        sigPads['operator'].ctx.clearRect(0,0,sigPads['operator'].canvas.width,sigPads['operator'].canvas.height);
+                        sigPads['operator'].ctx.drawImage(imgOp, 0, 0, sigPads['operator'].canvas.width, sigPads['operator'].canvas.height);
+                    };
+                    imgOp.src = rec.signatures.operator;
+                }
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => { window.print(); }, 500);
+        }
+
+        function resetFormState() {
+            document.getElementById('editingRecordId').value = '';
+            document.getElementById('headerSubTitle').innerText = "กลุ่มงานเภสัชกรรมและคุ้มครองผู้บริโภค โรงพยาบาลจัตุรัส";
+            document.getElementById('inspectionForm').reset();
+            clearSignature('officer');
+            clearSignature('operator');
+            photosData = {};
+            switchTab('nursing');
+        }
+
+        window.onload = function() {
+            switchTab('nursing');
+            initSignatures();
+            loadHistoryList();
+        };
+    </script>
+</body>
+</html>
